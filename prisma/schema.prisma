@@ -8,10 +8,13 @@ datasource db {
 }
 
 model UserAdmin {
-  id        Int    @id @default(autoincrement()) // 🔹 ID autoincremental
-  email     String @unique
+  id        Int      @id @default(autoincrement()) 
+  email     String   @unique
   password  String
   createdAt DateTime @default(now())
+
+  // 🔹 Relacionamento com os produtos (Um admin pode ter vários produtos)
+  products  Product[]
 }
 
 model User {
@@ -20,4 +23,19 @@ model User {
   email     String @unique
   password  String
   createdAt DateTime @default(now())
+}
+
+model Product {
+  id             Int      @id @default(autoincrement()) 
+  idAdmin        Int      // ID do administrador que cadastrou o produto
+  itemType       String   
+  supplier       String?  
+  name           String   
+  quantity       Int      
+  unit           String   
+  expirationDate DateTime?  
+  createdAt      DateTime @default(now()) 
+
+  // 🔹 Relacionamento correto com UserAdmin
+  userAdmin      UserAdmin @relation(fields: [idAdmin], references: [id], onDelete: Cascade)
 }
