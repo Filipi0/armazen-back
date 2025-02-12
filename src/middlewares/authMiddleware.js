@@ -14,4 +14,11 @@ function authenticateToken(req, res, next) {
   }
 }
 
-module.exports = authenticateToken;
+function isAdmin(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Acesso negado" });
+  }
+  next();
+}
+
+module.exports = { authenticateToken, isAdmin };
