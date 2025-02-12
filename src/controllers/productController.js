@@ -38,12 +38,10 @@ async function getProducts(req, res) {
     let products;
 
     if (req.user.role === "admin") {
-      // Admins podem ver apenas os produtos que eles cadastraram
       products = await prisma.product.findMany({
         where: { idAdmin: req.user.id },
       });
     } else {
-      // Usuários normais podem ver apenas os produtos do Admin que os cadastrou
       const adminId = await prisma.user.findUnique({
         where: { id: req.user.id },
         select: { idAdmin: true },
@@ -72,32 +70,31 @@ async function getProducts(req, res) {
 
 // 🔹 Deletar produto (Apenas o Admin que cadastrou)
 async function deleteProduct(req, res) {
-    try {
-        if (req.user.role !== "admin") {
-            return res.status(403).json({ error: "Acesso negado" });
-        }
-
-        const { id } = req.params;
-
-        // Verifica se o produto pertence ao Admin autenticado
-        const product = await prisma.product.findUnique({
-            where: { id: parseInt(id) },
-        });
-
-        if (!product || product.idAdmin !== req.user.id) {
-            return res
-                .status(403)
-                .json({ error: "Você não tem permissão para excluir este produto" });
-        }
-
-        await prisma.product.delete({ where: { id: parseInt(id) } });
-
-        res.json({ message: `Produto '${product.name}' deletado com sucesso!` });
-    } catch (error) {
-        res.status(500).json({ error: "Erro ao deletar produto" });
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Acesso negado" });
     }
-}
 
+    const { id } = req.params;
+
+    // Verifica se o produto pertence ao Admin autenticado
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!product || product.idAdmin !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "Você não tem permissão para excluir este produto" });
+    }
+
+    await prisma.product.delete({ where: { id: parseInt(id) } });
+
+    res.json({ message: `Produto '${product.name}' deletado com sucesso!` });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao deletar produto" });
+  }
+}
 
 module.exports = {
   createProduct,

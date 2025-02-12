@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: API de Usuários
+  title: API de Usuários e Produtos
   version: 1.0.0
-  description: Documentação da API de usuários e administradores
+  description: Documentação da API de usuários, administradores e produtos
 
 servers:
   - url: http://localhost:4000/api
@@ -165,3 +165,80 @@ paths:
           description: Acesso negado
         500:
           description: Erro ao atualizar a senha
+
+  /products:
+    post:
+      summary: Cadastra um novo produto (Apenas Admin)
+      tags:
+        - Produtos
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                itemType:
+                  type: string
+                  example: "Eletrônico"
+                supplier:
+                  type: string
+                  example: "Fornecedor X"
+                name:
+                  type: string
+                  example: "Teclado Mecânico"
+                quantity:
+                  type: integer
+                  example: 10
+                unit:
+                  type: string
+                  example: "unidade"
+                expirationDate:
+                  type: string
+                  format: date
+                  example: "2025-12-31"
+      responses:
+        201:
+          description: Produto cadastrado com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao cadastrar produto
+
+    get:
+      summary: Lista os produtos disponíveis (Admin e Usuários vinculados)
+      tags:
+        - Produtos
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Lista de produtos retornada com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao buscar produtos
+
+  /products/{id}:
+    delete:
+      summary: Deleta um produto (Apenas Admin que cadastrou)
+      tags:
+        - Produtos
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID do produto a ser deletado
+      responses:
+        200:
+          description: Produto deletado com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao deletar produto
