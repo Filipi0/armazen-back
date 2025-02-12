@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: API de Usuários
+  version: 1.0.0
+  description: Documentação da API de usuários e administradores
+
+servers:
+  - url: http://localhost:4000/api
+    description: Servidor Local
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+paths:
+  /register/admin:
+    post:
+      summary: Cria um novo administrador
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "admin@email.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        201:
+          description: Administrador criado com sucesso
+        500:
+          description: Erro ao registrar administrador
+
+  /register:
+    post:
+      summary: Cria um novo usuário (Apenas Admin pode criar)
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@email.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        201:
+          description: Usuário criado com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao registrar usuário
+
+  /login:
+    post:
+      summary: Realiza login e retorna um token JWT
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@email.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        200:
+          description: Login realizado com sucesso
+        401:
+          description: Credenciais inválidas
+        500:
+          description: Erro ao realizar login
+
+  /users:
+    get:
+      summary: Lista todos os usuários cadastrados pelo administrador autenticado
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Lista de usuários retornada com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao buscar usuários
+
+  /users/{id}:
+    delete:
+      summary: Deleta um usuário (Apenas Admin)
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário a ser deletado
+      responses:
+        200:
+          description: Usuário deletado com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao deletar usuário
+
+  /users/{id}/password:
+    put:
+      summary: Atualiza a senha de um usuário (Admin ou o próprio usuário)
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário a ter a senha alterada
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  example: "novaSenha123"
+      responses:
+        200:
+          description: Senha atualizada com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao atualizar a senha

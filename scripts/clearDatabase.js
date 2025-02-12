@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 
 async function clearDatabase() {
   try {
-    // Apaga todos os usuários normais e admins
     await prisma.user.deleteMany({});
     await prisma.userAdmin.deleteMany({});
 
@@ -17,3 +16,6 @@ async function clearDatabase() {
 }
 
 clearDatabase();
+
+
+// para executar o script, basta rodar o comando node scripts/clearDatabase.js no terminal

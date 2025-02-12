@@ -114,10 +114,37 @@ async function deleteUser(req, res) {
   }
 }
 
+async function updatePassword(req, res) {
+  try {
+    const { id } = req.params; // ID do usuário a ser atualizado
+    const { newPassword } = req.body; // Nova senha
+
+    // Apenas o próprio usuário ou um administrador pode alterar a senha
+    if (req.user.role !== "admin" && req.user.id !== parseInt(id)) {
+      return res.status(403).json({ error: "Acesso negado" });
+    }
+
+    // Criptografar a nova senha
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Atualizar a senha no banco
+    await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: "Senha atualizada com sucesso!" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao atualizar a senha" });
+  }
+}
+
+
 module.exports = {
   registerAdmin,
   registerUser,
   loginUser,
   getUsers,
   deleteUser,
+  updatePassword,
 };
