@@ -21,6 +21,7 @@ async function registerAdmin(req, res) {
   }
 }
 
+// Registrar um novo usuário (Somente Admin)
 async function registerUser(req, res) {
   try {
     if (req.user.role !== "admin") {
@@ -44,7 +45,7 @@ async function registerUser(req, res) {
       data: {
         email,
         password: hashedPassword,
-        idAdmin: req.user.id, // 🔹 Certifica que o usuário tem um admin associado
+        idAdmin: req.user.id, 
       },
     });
 
