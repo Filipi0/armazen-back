@@ -1,13 +1,14 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const path = require("path");
 
 const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "API de Usuários",
-      version: "1.0.0",
-      description: "Documentação da API de usuários e administradores",
+      title: "API de Usuários, Produtos e Estoque",
+      version: "1.2.0",
+      description: "Documentação da API incluindo usuários, produtos e controle de estoque",
     },
     servers: [
       {
@@ -26,7 +27,10 @@ const options = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: ["./src/docs/*.yaml"], // 🔹 Importa os arquivos YAML
+  apis: [
+    "./src/routes/*.js", 
+    path.join(__dirname, "../docs/swagger.yaml"),
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

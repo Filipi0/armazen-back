@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: API de Usuários e Produtos
-  version: 1.0.0
-  description: Documentação da API de usuários, administradores e produtos
+  title: API de Usuários, Produtos e Estoque
+  version: 1.1.0
+  description: Documentação da API de usuários, administradores, produtos e controle de estoque
 
 servers:
   - url: http://localhost:4000/api
@@ -97,75 +97,6 @@ paths:
         500:
           description: Erro ao realizar login
 
-  /users:
-    get:
-      summary: Lista todos os usuários cadastrados pelo administrador autenticado
-      tags:
-        - Usuário
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: Lista de usuários retornada com sucesso
-        403:
-          description: Acesso negado
-        500:
-          description: Erro ao buscar usuários
-
-  /users/{id}:
-    delete:
-      summary: Deleta um usuário (Apenas Admin)
-      tags:
-        - Usuário
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID do usuário a ser deletado
-      responses:
-        200:
-          description: Usuário deletado com sucesso
-        403:
-          description: Acesso negado
-        500:
-          description: Erro ao deletar usuário
-
-  /users/{id}/password:
-    put:
-      summary: Atualiza a senha de um usuário (Admin ou o próprio usuário)
-      tags:
-        - Usuário
-      security:
-        - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID do usuário a ter a senha alterada
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                newPassword:
-                  type: string
-                  example: "novaSenha123"
-      responses:
-        200:
-          description: Senha atualizada com sucesso
-        403:
-          description: Acesso negado
-        500:
-          description: Erro ao atualizar a senha
-
   /products:
     post:
       summary: Cadastra um novo produto (Apenas Admin)
@@ -242,3 +173,195 @@ paths:
           description: Acesso negado
         500:
           description: Erro ao deletar produto
+
+  /products/{id}/update-quantity:
+    patch:
+      summary: Atualiza a quantidade de um produto no estoque
+      tags:
+        - Estoque
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID do produto a ser atualizado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [increment, decrement]
+                  example: "increment"
+                amount:
+                  type: integer
+                  example: 10
+      responses:
+        200:
+          description: Quantidade do produto atualizada com sucesso
+        400:
+          description: Requisição inválida
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao atualizar a quantidade do produto
+
+  /stock-summary:
+  get:
+    summary: Obtém um resumo da situação do estoque
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna um resumo dos produtos no estoque
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nearExpiration:
+                  type: integer
+                  example: 5
+                lowStock:
+                  type: integer
+                  example: 10
+                expiredThisMonth:
+                  type: integer
+                  example: 3
+                outOfStockThisMonth:
+                  type: integer
+                  example: 7
+                untouchedThisMonth:
+                  type: integer
+                  example: 15
+                mostMovedItems:
+                  type: integer
+                  example: 5
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar resumo do estoque
+
+/stock-details/near-expiration:
+  get:
+    summary: Lista produtos próximos do vencimento (10 dias antes)
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna a lista de produtos próximos do vencimento
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar produtos próximos do vencimento
+
+/stock-details/low-stock:
+  get:
+    summary: Lista produtos prestes a esgotar (≤ 15 unidades)
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna a lista de produtos prestes a esgotar
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar produtos prestes a esgotar
+
+/stock-details/expired-this-month:
+  get:
+    summary: Lista produtos expirados durante o mês
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna a lista de produtos expirados no mês atual
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar produtos expirados
+
+/stock-details/out-of-stock-this-month:
+  get:
+    summary: Lista produtos esgotados durante o mês
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna a lista de produtos esgotados no mês atual
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar produtos esgotados
+
+/stock-details/untouched-this-month:
+  get:
+    summary: Lista produtos não modificados durante o mês
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna a lista de produtos que não foram modificados no mês
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar produtos não modificados
+
+/stock-details/most-moved-items:
+  get:
+    summary: Lista os produtos mais movimentados durante o mês
+    tags:
+      - Estoque
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Retorna a lista de produtos mais movimentados no mês atual
+      403:
+        description: Acesso negado
+      500:
+        description: Erro ao buscar produtos mais movimentados
+
+
+  /stock-details:
+    get:
+      summary: Obtém detalhes dos produtos dentro de uma categoria específica
+      tags:
+        - Estoque
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: filterType
+          required: true
+          schema:
+            type: string
+            enum: [nearExpiration, lowStock, expiredThisMonth, outOfStockThisMonth, untouchedThisMonth, mostMovedItems]
+          description: Tipo de filtro para os produtos no estoque
+      responses:
+        200:
+          description: Retorna os detalhes dos produtos na categoria selecionada
+        400:
+          description: Filtro inválido
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao buscar detalhes dos produtos no estoque

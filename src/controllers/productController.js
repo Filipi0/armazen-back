@@ -145,8 +145,53 @@ async function deleteProduct(req, res) {
   }
 }
 
+async function updateProductQuantity(req, res) {
+  try {
+    const { id } = req.params; // ID do produto
+    const { action, amount } = req.body; // Ação ("increment" ou "decrement") e quantidade customizada
+
+    if (!["increment", "decrement"].includes(action)) {
+      return res.status(400).json({ error: "Ação inválida. Use 'increment' ou 'decrement'." });
+    }
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Quantidade inválida. Deve ser um número maior que 0." });
+    }
+
+    // Busca o produto no banco
+    const product = await prisma.product.findUnique({ where: { id: parseInt(id) } });
+
+    if (!product) {
+      return res.status(404).json({ error: "Produto não encontrado." });
+    }
+
+    // Define a nova quantidade com base na ação e quantidade enviada
+    let newQuantity = action === "increment" ? product.quantity + amount : product.quantity - amount;
+
+    // Evita que a quantidade fique negativa
+    if (newQuantity < 0) {
+      newQuantity = 0;
+    }
+
+    // Atualiza o produto no banco
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: { quantity: newQuantity },
+    });
+
+    res.json({ message: "Quantidade do produto atualizada!", updatedProduct });
+  } catch (error) {
+    console.error("Erro ao atualizar quantidade:", error);
+    res.status(500).json({ error: "Erro ao atualizar a quantidade do produto." });
+  }
+}
+
+
+
+
 module.exports = {
   createProduct,
   getProducts,
   deleteProduct,
+  updateProductQuantity,
 };
