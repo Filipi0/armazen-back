@@ -21,7 +21,6 @@ async function registerAdmin(req, res) {
   }
 }
 
-// Registrar um novo usuário (Somente Admin pode criar)
 async function registerUser(req, res) {
   try {
     if (req.user.role !== "admin") {
@@ -29,21 +28,38 @@ async function registerUser(req, res) {
     }
 
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email e senha são obrigatórios" });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ error: "E-mail já cadastrado" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, idAdmin: req.user.id },
+      data: {
+        email,
+        password: hashedPassword,
+        idAdmin: req.user.id, // 🔹 Certifica que o usuário tem um admin associado
+      },
     });
 
     res.status(201).json({ 
-      message: "Usuário criado!", 
+      message: "Usuário criado com sucesso!", 
       user: { id: user.id, email: user.email, idAdmin: user.idAdmin } 
     });
-    
+
   } catch (error) {
-    res.status(500).json({ error: "Erro ao registrar usuário" });
+    console.error("Erro ao registrar usuário:", error);
+    res.status(500).json({ error: "Erro interno ao registrar usuário" });
   }
 }
+
+
 
 // Login de usuário (Admin ou Normal)
 async function loginUser(req, res) {

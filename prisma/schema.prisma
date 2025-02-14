@@ -18,16 +18,20 @@ model UserAdmin {
 }
 
 model User {
-  id        Int    @id @default(autoincrement()) // 🔹 ID autoincremental
+  id        Int    @id @default(autoincrement()) 
   idAdmin   Int
   email     String @unique
   password  String
   createdAt DateTime @default(now())
+
+  // 🔹 Relacionamento com produtos (Usuário comum pode criar produtos)
+  products  Product[]
 }
 
 model Product {
   id             Int      @id @default(autoincrement()) 
-  idAdmin        Int      // ID do administrador que cadastrou o produto
+  idAdmin        Int?     // Agora pode ser NULL se o produto for cadastrado por um usuário comum
+  idUser         Int?     // Novo campo para identificar o usuário que cadastrou o produto
   itemType       String   
   supplier       String?  
   name           String   
@@ -36,6 +40,9 @@ model Product {
   expirationDate DateTime?  
   createdAt      DateTime @default(now()) 
 
-  // 🔹 Relacionamento correto com UserAdmin
-  userAdmin      UserAdmin @relation(fields: [idAdmin], references: [id], onDelete: Cascade)
+  // 🔹 Relacionamento correto com UserAdmin (Produto pode ser cadastrado por um Admin)
+  userAdmin      UserAdmin? @relation(fields: [idAdmin], references: [id], onDelete: Cascade)
+
+  // 🔹 Relacionamento com User (Produto pode ser cadastrado por um Usuário comum)
+  user          User?      @relation(fields: [idUser], references: [id], onDelete: Cascade)
 }
