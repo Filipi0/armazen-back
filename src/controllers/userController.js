@@ -76,21 +76,23 @@ async function loginUser(req, res) {
     }
 
     if (!user) {
-      return res.status(401).json({ error: "Credenciais inválidas" });
+      return res.status(401).json({ error: "E-mail ou senha inválidos" });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ error: "Credenciais inválidas" });
+      return res.status(401).json({ error: "E-mail ou senha inválidos" });
     }
 
     const token = jwt.sign({ id: user.id, email: user.email, role: userType }, JWT_SECRET, { expiresIn: "2h" });
 
     res.json({ message: "Login realizado com sucesso", token });
   } catch (error) {
+    console.error("Erro no login:", error);
     res.status(500).json({ error: "Erro ao realizar login" });
   }
 }
+
 
 // Listar usuários vinculados ao Admin autenticado
 async function getUsers(req, res) {
