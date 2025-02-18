@@ -1,2 +1,2 @@
 Comando para executar o codigo
-$ npx nodemon server.js
+ npx nodemon server.js

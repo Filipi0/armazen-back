@@ -97,6 +97,73 @@ paths:
         500:
           description: Erro ao realizar login
 
+  /users:
+    get:
+      summary: Lista todos os usuários cadastrados pelo administrador autenticado
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Lista de usuários retornada com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao buscar usuários
+  /users/{id}:
+    delete:
+      summary: Deleta um usuário (Apenas Admin)
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário a ser deletado
+      responses:
+        200:
+          description: Usuário deletado com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao deletar usuário
+  /users/{id}/password:
+    put:
+      summary: Atualiza a senha de um usuário (Admin ou o próprio usuário)
+      tags:
+        - Usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário a ter a senha alterada
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  example: "novaSenha123"
+      responses:
+        200:
+          description: Senha atualizada com sucesso
+        403:
+          description: Acesso negado
+        500:
+          description: Erro ao atualizar a senha do usuário
+
   /products:
     post:
       summary: Cadastra um novo produto (Apenas Admin)
@@ -340,7 +407,6 @@ paths:
       500:
         description: Erro ao buscar produtos mais movimentados
 
-
   /stock-details:
     get:
       summary: Obtém detalhes dos produtos dentro de uma categoria específica
@@ -354,7 +420,15 @@ paths:
           required: true
           schema:
             type: string
-            enum: [nearExpiration, lowStock, expiredThisMonth, outOfStockThisMonth, untouchedThisMonth, mostMovedItems]
+            enum:
+              [
+                nearExpiration,
+                lowStock,
+                expiredThisMonth,
+                outOfStockThisMonth,
+                untouchedThisMonth,
+                mostMovedItems,
+              ]
           description: Tipo de filtro para os produtos no estoque
       responses:
         200:
