@@ -11,9 +11,9 @@ model UserAdmin {
   id        Int      @id @default(autoincrement()) 
   email     String   @unique
   password  String
+  name      String   // 🔹 Novo campo para armazenar o nome do admin
   createdAt DateTime @default(now())
 
-  // 🔹 Relacionamento com os produtos (Um admin pode ter vários produtos)
   products  Product[]
 }
 
@@ -22,9 +22,9 @@ model User {
   idAdmin   Int
   email     String @unique
   password  String
+  name      String  // 🔹 Novo campo para armazenar o nome do usuário
   createdAt DateTime @default(now())
 
-  // 🔹 Relacionamento com produtos (Usuário comum pode criar produtos)
   products  Product[]
 }
 

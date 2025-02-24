@@ -9,26 +9,25 @@ async function createProduct(req, res) {
       return res.status(403).json({ error: "Acesso negado" });
     }
 
-    const { itemType, supplier, name, quantity, unit, expirationDate } =
-      req.body;
+    const { itemType, supplier, name, quantity, unit, expirationDate } = req.body;
     let idAdmin;
+    let idUser = null; // 🔹 Inicializa idUser como null
 
-    if (req.user.role === "admin") {
+    if (req.user.isAdmin) {
       idAdmin = req.user.id;
     } else {
-      // busca o admin associado ao usuário comum no banco
+      // 🔹 Se for um usuário comum, busca o idAdmin e define idUser corretamente
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
         select: { idAdmin: true },
       });
 
       idAdmin = user?.idAdmin;
+      idUser = req.user.id; // 🔹 Agora idUser recebe corretamente o ID do usuário comum
     }
 
     if (!idAdmin) {
-      return res
-        .status(400)
-        .json({ error: "Usuário sem administrador associado" });
+      return res.status(400).json({ error: "Usuário sem administrador associado" });
     }
 
     const product = await prisma.product.create({
@@ -39,19 +38,18 @@ async function createProduct(req, res) {
         quantity,
         unit,
         expirationDate: expirationDate ? new Date(expirationDate) : null,
-        idAdmin, // 🔹 Agora sempre haverá um idAdmin válido
-        idUser: req.user.role === "user" ? req.user.id : null,
+        idAdmin, // 🔹 Sempre haverá um idAdmin válido
+        idUser,  // 🔹 Agora idUser é atribuído corretamente
       },
     });
 
-    res
-      .status(201)
-      .json({ message: "Produto cadastrado com sucesso!", product });
+    res.status(201).json({ message: "Produto cadastrado com sucesso!", product });
   } catch (error) {
     console.error("Erro ao cadastrar produto:", error);
     res.status(500).json({ error: "Erro ao cadastrar produto" });
   }
 }
+
 
 // Listar produtos (Usuários normais veem apenas seus produtos, admins veem os deles e dos usuários vinculados)
 async function getProducts(req, res) {
@@ -119,6 +117,7 @@ async function deleteProduct(req, res) {
     }
 
     const { id } = req.params;
+    console.log(`Usuário tentando deletar o produto: ${req.user.id}, Admin: ${req.user.isAdmin}`);
 
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id) },
@@ -128,22 +127,29 @@ async function deleteProduct(req, res) {
       return res.status(404).json({ error: "Produto não encontrado" });
     }
 
-    if (
-      (req.user.role !== "admin" && product.idUser !== req.user.id) ||
-      (req.user.role === "admin" && product.idAdmin !== req.user.id)
-    ) {
-      return res
-        .status(403)
-        .json({ error: "Você não tem permissão para excluir este produto" });
+    console.log(`Dono do produto -> idAdmin: ${product.idAdmin}, idUser: ${product.idUser}`);
+
+    // 🔹 Se for admin, pode deletar qualquer produto que pertença a ele
+    if (req.user.isAdmin && product.idAdmin === req.user.id) {
+      await prisma.product.delete({ where: { id: parseInt(id) } });
+      return res.json({ message: `Produto '${product.name}' deletado com sucesso!` });
     }
 
-    await prisma.product.delete({ where: { id: parseInt(id) } });
+    // 🔹 Se for um usuário normal, só pode deletar seus próprios produtos
+    if (!req.user.isAdmin && product.idUser === req.user.id) {
+      await prisma.product.delete({ where: { id: parseInt(id) } });
+      return res.json({ message: `Produto '${product.name}' deletado com sucesso!` });
+    }
 
-    res.json({ message: `Produto '${product.name}' deletado com sucesso!` });
+    console.log("Permissão negada para deletar o produto.");
+    return res.status(403).json({ error: "Você não tem permissão para excluir este produto" });
   } catch (error) {
+    console.error("Erro ao deletar produto:", error);
     res.status(500).json({ error: "Erro ao deletar produto" });
   }
 }
+
+
 
 async function updateProductQuantity(req, res) {
   try {

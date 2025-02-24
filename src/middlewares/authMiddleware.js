@@ -15,10 +15,13 @@ function authenticateToken(req, res, next) {
 }
 
 function isAdmin(req, res, next) {
-  if (req.user.role !== "admin") {
+  if (!req.user.isAdmin) {
     return res.status(403).json({ error: "Acesso negado" });
   }
   next();
 }
 
+
 module.exports = { authenticateToken, isAdmin };
+
+//
