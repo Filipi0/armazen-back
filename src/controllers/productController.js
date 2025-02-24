@@ -54,22 +54,21 @@ async function createProduct(req, res) {
 // Listar produtos (Usuários normais veem apenas seus produtos, admins veem os deles e dos usuários vinculados)
 async function getProducts(req, res) {
   try {
-    const { name, supplier, itemType, id } = req.query;
+    console.log("🔹 Usuário autenticado:", req.user);
 
+    const { name, supplier, itemType, id } = req.query;
     let filters = {};
 
-    // filtros passados na URL
     if (id) filters.id = parseInt(id);
     if (name) filters.name = { contains: name, mode: "insensitive" };
-    if (supplier)
-      filters.supplier = { contains: supplier, mode: "insensitive" };
-    if (itemType)
-      filters.itemType = { contains: itemType, mode: "insensitive" };
+    if (supplier) filters.supplier = { contains: supplier, mode: "insensitive" };
+    if (itemType) filters.itemType = { contains: itemType, mode: "insensitive" };
+
+    console.log("🔹 Filtros aplicados:", filters);
 
     let products;
 
-    if (req.user.role === "admin") {
-      // 🔹 Admin pode ver todos os produtos dele e de seus usuários vinculados
+    if (req.user.isAdmin) {
       products = await prisma.product.findMany({
         where: {
           AND: [
@@ -85,6 +84,7 @@ async function getProducts(req, res) {
       });
 
       const userIds = usersWithSameAdmin.map((user) => user.id);
+      console.log("🔹 Usuários vinculados ao admin:", userIds);
 
       products = await prisma.product.findMany({
         where: {
@@ -102,12 +102,14 @@ async function getProducts(req, res) {
       });
     }
 
+    console.log("🔹 Produtos retornados:", products);
     res.json(products);
   } catch (error) {
-    console.error("Erro ao buscar produtos:", error);
+    console.error("🚨 Erro ao buscar produtos:", error);
     res.status(500).json({ error: "Erro ao buscar produtos" });
   }
 }
+
 
 // Deletar produto (Usuários só podem deletar seus próprios produtos, admins podem deletar os deles e de seus usuários)
 async function deleteProduct(req, res) {
