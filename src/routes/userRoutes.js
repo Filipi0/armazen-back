@@ -5,7 +5,8 @@ const {
   loginUser,
   getUsers,
   deleteUser,
-  updatePassword,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/userController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
@@ -16,7 +17,8 @@ router.post("/register", authenticateToken, registerUser);
 router.post("/login", loginUser);
 router.get("/users", authenticateToken, getUsers);
 router.delete("/users/:id", authenticateToken, deleteUser);
-router.put("/users/:id/password", authenticateToken, updatePassword);
+router.post("/forgot-password", forgotPassword); // Rota para solicitar a recuperação de senha
+router.post("/reset-password", resetPassword);
 
 
 module.exports = router;
