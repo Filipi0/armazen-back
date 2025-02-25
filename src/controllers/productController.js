@@ -11,19 +11,19 @@ async function createProduct(req, res) {
 
     const { itemType, supplier, name, quantity, unit, expirationDate } = req.body;
     let idAdmin;
-    let idUser = null; // 🔹 Inicializa idUser como null
+    let idUser = null; 
 
     if (req.user.isAdmin) {
       idAdmin = req.user.id;
     } else {
-      // 🔹 Se for um usuário comum, busca o idAdmin e define idUser corretamente
+      // Se for um usuário comum, busca o idAdmin e define idUser corretamente
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
         select: { idAdmin: true },
       });
 
       idAdmin = user?.idAdmin;
-      idUser = req.user.id; // 🔹 Agora idUser recebe corretamente o ID do usuário comum
+      idUser = req.user.id; 
     }
 
     if (!idAdmin) {
@@ -38,8 +38,8 @@ async function createProduct(req, res) {
         quantity,
         unit,
         expirationDate: expirationDate ? new Date(expirationDate) : null,
-        idAdmin, // 🔹 Sempre haverá um idAdmin válido
-        idUser,  // 🔹 Agora idUser é atribuído corretamente
+        idAdmin,
+        idUser,  
       },
     });
 

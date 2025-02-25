@@ -67,7 +67,8 @@ async function getStockSummary(req, res) {
       const currentDate = new Date();
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       
-      let whereClause = req.user.role === "admin" ? 
+      // Atualizado para utilizar req.user.isAdmin
+      let whereClause = req.user.isAdmin ? 
         { idAdmin: req.user.id } : 
         { OR: [{ idUser: req.user.id }, { idAdmin: req.user.idAdmin }] };
   
@@ -76,7 +77,10 @@ async function getStockSummary(req, res) {
       switch (filterType) {
         case "near-expiration":
           products = await prisma.product.findMany({
-            where: { expirationDate: { lte: new Date(currentDate.getTime() + 10 * 24 * 60 * 60 * 1000) }, ...whereClause },
+            where: { 
+              expirationDate: { lte: new Date(currentDate.getTime() + 10 * 24 * 60 * 60 * 1000) }, 
+              ...whereClause 
+            },
           });
           break;
         case "low-stock":
@@ -109,16 +113,17 @@ async function getStockSummary(req, res) {
         default:
           return res.status(400).json({ error: "Filtro inválido" });
       }
-  
+    
       if (products.length === 0) {
         return res.json({ message: "Nenhum produto encontrado para este filtro." });
       }
-  
+    
       res.json(products);
     } catch (error) {
       console.error("Erro ao buscar detalhes dos produtos:", error);
       res.status(500).json({ error: "Erro ao buscar detalhes dos produtos" });
     }
   }
+  
   
 module.exports = { getStockSummary, getStockDetails };
