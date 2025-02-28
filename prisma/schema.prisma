@@ -8,14 +8,17 @@ datasource db {
 }
 
 model UserAdmin {
-  id        Int      @id @default(autoincrement()) 
-  email     String   @unique
-  password  String
-  name      String   // 🔹 Novo campo para armazenar o nome do admin
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement()) 
+  email      String   @unique
+  password   String
+  name       String
+  createdAt  DateTime @default(now())
 
-  products  Product[]
+  resetToken String?  // Campo para armazenar o token de recuperação de senha (opcional)
+
+  products   Product[]
 }
+
 
 model User {
   id        Int    @id @default(autoincrement()) 
@@ -24,6 +27,8 @@ model User {
   password  String
   name      String  // 🔹 Novo campo para armazenar o nome do usuário
   createdAt DateTime @default(now())
+
+  resetToken String? // Permite a recuperação de senha para usuários normais
 
   products  Product[]
 }

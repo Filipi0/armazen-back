@@ -21,4 +21,5 @@ router.post("/forgot-password", forgotPassword); // Rota para solicitar a recupe
 router.post("/reset-password", resetPassword);
 
 
+
 module.exports = router;

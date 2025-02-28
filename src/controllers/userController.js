@@ -123,35 +123,48 @@ async function deleteUser(req, res) {
   }
 }
 
-// 🔹 Atualizar senha do usuário
 async function forgotPassword(req, res) {
   try {
     const { email } = req.body;
-    
-    // Verifica se o email existe no banco
-    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Verifica se o email pertence a um administrador ou um usuário normal
+    let user = await prisma.userAdmin.findUnique({ where: { email } });
+    let userType = "admin";
+
     if (!user) {
-      return res.status(404).json({ error: "Email não encontrado" });
+      user = await prisma.user.findUnique({ where: { email } });
+      userType = "user";
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
     // Gerar um token de recuperação válido por 1 hora
-    const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
+    const resetToken = jwt.sign({ email, userType }, JWT_SECRET, { expiresIn: "1h" });
 
-    // Armazena o token no banco
-    await prisma.user.update({
-      where: { email },
-      data: { resetToken },
-    });
+    // Atualiza o token no banco
+    if (userType === "admin") {
+      await prisma.userAdmin.update({
+        where: { email },
+        data: { resetToken },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email },
+        data: { resetToken },
+      });
+    }
 
-    // Link de redefinição
+    // Link de redefinição de senha
     const resetLink = `${APP_URL}/reset-password?token=${resetToken}`;
 
     // Configuração do email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // Email do remetente
-        pass: process.env.EMAIL_PASS, // Senha do email (ou app password do Gmail)
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
@@ -160,7 +173,7 @@ async function forgotPassword(req, res) {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Recuperação de Senha",
-      html: `<p>Olá,</p>
+      html: `<p>Olá ${user.name},</p>
              <p>Você solicitou a redefinição de senha. Clique no link abaixo para redefinir sua senha:</p>
              <a href="${resetLink}">${resetLink}</a>
              <p>Se você não solicitou essa mudança, ignore este email.</p>`,
@@ -176,31 +189,46 @@ async function forgotPassword(req, res) {
   }
 }
 
-// 🔹 Redefinir senha do usuário
+
+
+
 async function resetPassword(req, res) {
   try {
     const { token, newPassword } = req.body;
 
     // Verifica se o token é válido
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded || !decoded.email) {
+    if (!decoded || !decoded.email || !decoded.userType) {
       return res.status(400).json({ error: "Token inválido ou expirado" });
     }
 
-    // Verifica se o usuário ainda tem esse token no banco
-    const user = await prisma.user.findUnique({ where: { email: decoded.email } });
+    // Busca o usuário correspondente
+    let user = null;
+    if (decoded.userType === "admin") {
+      user = await prisma.userAdmin.findUnique({ where: { email: decoded.email } });
+    } else {
+      user = await prisma.user.findUnique({ where: { email: decoded.email } });
+    }
+
     if (!user || user.resetToken !== token) {
-      return res.status(400).json({ error: "Token inválido" });
+      return res.status(400).json({ error: "Token inválido ou já utilizado" });
     }
 
     // Criptografa a nova senha
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Atualiza a senha no banco e remove o token de recuperação
-    await prisma.user.update({
-      where: { email: decoded.email },
-      data: { password: hashedPassword, resetToken: null },
-    });
+    if (decoded.userType === "admin") {
+      await prisma.userAdmin.update({
+        where: { email: decoded.email },
+        data: { password: hashedPassword, resetToken: null },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email: decoded.email },
+        data: { password: hashedPassword, resetToken: null },
+      });
+    }
 
     return res.json({ message: "Senha redefinida com sucesso!" });
   } catch (error) {
@@ -208,6 +236,9 @@ async function resetPassword(req, res) {
     res.status(500).json({ error: "Erro ao redefinir senha" });
   }
 }
+
+
+
 
 
 module.exports = {
