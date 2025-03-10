@@ -156,8 +156,7 @@ async function forgotPassword(req, res) {
       });
     }
 
-    // Link de redefinição de senha
-    const resetLink = `${APP_URL}/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/recupera-senha?token=${resetToken}`;
 
     // Configuração do email
     const transporter = nodemailer.createTransport({
@@ -187,6 +186,7 @@ async function forgotPassword(req, res) {
     res.status(500).json({ error: "Erro ao processar recuperação de senha" });
   }
 }
+
 
 
 
