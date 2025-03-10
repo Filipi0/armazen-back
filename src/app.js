@@ -12,7 +12,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-//Definição das Rotas
 app.use("/api", userRoutes);
 app.use("/api", productRoutes);
 app.use("/api", stockRoutes);

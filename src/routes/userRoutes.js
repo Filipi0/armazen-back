@@ -17,7 +17,7 @@ router.post("/register", authenticateToken, registerUser);
 router.post("/login", loginUser);
 router.get("/users", authenticateToken, getUsers);
 router.delete("/users/:id", authenticateToken, deleteUser);
-router.post("/forgot-password", forgotPassword); // Rota para solicitar a recuperação de senha
+router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
 

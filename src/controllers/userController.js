@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer"); // Importante para enviar e-mails
+const nodemailer = require("nodemailer"); 
 const { PrismaClient } = require("@prisma/client");
 const { 
   registerAdminSchema, 
@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
 const APP_URL = process.env.APP_URL;
 
-// 🔹 Registrar um novo administrador
+//Registrar um novo administrador
 async function registerAdmin(req, res) {
   try {
     const result = registerAdminSchema.safeParse(req.body);
@@ -34,7 +34,7 @@ async function registerAdmin(req, res) {
   }
 }
 
-// 🔹 Registrar um novo usuário (Somente Admin)
+//Registrar um novo usuário (Somente Admin)
 async function registerUser(req, res) {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ error: "Acesso negado" });
@@ -59,7 +59,7 @@ async function registerUser(req, res) {
   }
 }
 
-// 🔹 Login para Administrador e Usuário Comum
+//Login para Administrador e Usuário Comum
 async function loginUser(req, res) {
   try {
     const result = loginSchema.safeParse(req.body);
@@ -88,7 +88,7 @@ async function loginUser(req, res) {
   }
 }
 
-// 🔹 Listar usuários vinculados ao Admin autenticado
+//Listar usuários vinculados ao Admin autenticado
 async function getUsers(req, res) {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ error: "Acesso negado" });
@@ -101,7 +101,7 @@ async function getUsers(req, res) {
   }
 }
 
-// 🔹 Deletar usuário (Somente Admin e apenas usuários criados por ele)
+//Deletar usuário (Somente Admin e apenas usuários criados por ele)
 async function deleteUser(req, res) {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ error: "Acesso negado" });
@@ -168,7 +168,6 @@ async function forgotPassword(req, res) {
       },
     });
 
-    // Conteúdo do email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
