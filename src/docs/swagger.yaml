@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: API de Usuários, Produtos e Estoque
+  title: API do ArmaZen
   version: 1.1.0
   description: Documentação da API de usuários, administradores, produtos e controle de estoque
 
@@ -37,6 +37,9 @@ paths:
                 password:
                   type: string
                   example: "123456"
+                name:
+                  type: string
+                  example: "Admin Teste"  
       responses:
         201:
           description: Administrador criado com sucesso
@@ -63,6 +66,9 @@ paths:
                 password:
                   type: string
                   example: "123456"
+                name:
+                  type: string
+                  example: "Usuário Teste"
       responses:
         201:
           description: Usuário criado com sucesso
