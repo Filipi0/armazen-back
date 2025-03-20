@@ -241,20 +241,14 @@ paths:
         500:
           description: Erro ao deletar produto
 
-  /products/{id}/update-quantity:
-    patch:
-      summary: Atualiza a quantidade de um produto no estoque
+
+  /stock/move:
+    post:
+      summary: Registra uma movimentação de estoque
       tags:
         - Estoque
       security:
         - BearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          description: ID do produto a ser atualizado
       requestBody:
         required: true
         content:
@@ -262,23 +256,90 @@ paths:
             schema:
               type: object
               properties:
-                action:
-                  type: string
-                  enum: [increment, decrement]
-                  example: "increment"
-                amount:
+                productId:
                   type: integer
-                  example: 10
+                  example: 1
+                quantity:
+                  type: integer
+                  example: 5
+                movementType:
+                  type: string
+                  enum: [entrada, saida]
+                  example: "entrada"
       responses:
         200:
-          description: Quantidade do produto atualizada com sucesso
+          description: "Movimentação registrada com sucesso"
         400:
-          description: Requisição inválida
-        403:
-          description: Acesso negado
+          description: "Erro na requisição (exemplo: tipo de movimentação inválido)"
+        404:
+          description: "Produto não encontrado"
         500:
-          description: Erro ao atualizar a quantidade do produto
+          description: "Erro ao registrar movimentação"
 
+  /stock/movements:
+    get:
+      summary: Lista todas as movimentações de estoque
+      tags:
+        - Estoque
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Retorna uma lista de movimentações de estoque"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    productId:
+                      type: integer
+                      example: 1
+                    movementType:
+                      type: string
+                      enum: [entrada, saida]
+                      example: "saida"
+                    quantity:
+                      type: integer
+                      example: 5
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: "2025-03-20T12:00:00Z"
+                    user:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 3
+                        name:
+                          type: string
+                          example: "Usuário Teste"
+                        email:
+                          type: string
+                          example: "user@email.com"
+                    userAdmin:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: "Admin Teste"
+                        email:
+                          type: string
+                          example: "admin@email.com"
+        500:
+          description: "Erro ao buscar movimentações"
+
+
+
+  
   /stock-summary:
   get:
     summary: Obtém um resumo da situação do estoque
