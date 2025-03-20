@@ -14,29 +14,33 @@ model UserAdmin {
   name       String
   createdAt  DateTime @default(now())
 
-  resetToken String?  // Campo para armazenar o token de recuperação de senha (opcional)
+  resetToken String?  
 
   products   Product[]
+  stockMovements StockMovement[] 
+  users User[] // Relacionamento reverso com usuários
 }
-
 
 model User {
   id        Int    @id @default(autoincrement()) 
   idAdmin   Int
   email     String @unique
   password  String
-  name      String  // 🔹 Novo campo para armazenar o nome do usuário
+  name      String  
   createdAt DateTime @default(now())
 
-  resetToken String? // Permite a recuperação de senha para usuários normais
+  resetToken String? 
 
   products  Product[]
+
+  userAdmin UserAdmin @relation(fields: [idAdmin], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
 }
 
 model Product {
   id             Int      @id @default(autoincrement()) 
-  idAdmin        Int?     // Agora pode ser NULL se o produto for cadastrado por um usuário comum
-  idUser         Int?     // Novo campo para identificar o usuário que cadastrou o produto
+  idAdmin        Int?     
+  idUser         Int?     
   itemType       String   
   supplier       String?  
   name           String   
@@ -45,9 +49,27 @@ model Product {
   expirationDate DateTime?  
   createdAt      DateTime @default(now()) 
 
-  // 🔹 Relacionamento correto com UserAdmin (Produto pode ser cadastrado por um Admin)
   userAdmin      UserAdmin? @relation(fields: [idAdmin], references: [id], onDelete: Cascade)
-
-  // 🔹 Relacionamento com User (Produto pode ser cadastrado por um Usuário comum)
   user          User?      @relation(fields: [idUser], references: [id], onDelete: Cascade)
+
+  stockMovements StockMovement[]
+}
+
+enum MovementType {
+  entrada
+  saida
+}
+
+model StockMovement {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  userId      Int?
+  adminId     Int?
+  quantity    Int
+  movementType MovementType
+  createdAt   DateTime @default(now())
+
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAdmin   UserAdmin? @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }

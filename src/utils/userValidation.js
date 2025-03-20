@@ -3,7 +3,7 @@ const { z } = require("zod");
 //validação para registro de administrador
 const registerAdminSchema = z.object({
   email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  password: z.string().min(4, "A senha deve ter pelo menos 4 caracteres"),
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
 });
 

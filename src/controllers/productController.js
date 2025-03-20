@@ -195,6 +195,119 @@ async function updateProductQuantity(req, res) {
 }
 
 
+async function moveStock(req, res) {
+  try {
+    const { productId, quantity, movementType } = req.body;
+
+    if (!["entrada", "saida"].includes(movementType)) {
+      return res.status(400).json({ error: "Tipo de movimentação inválido. Use 'entrada' ou 'saida'." });
+    }
+
+    if (!quantity || isNaN(quantity) || quantity <= 0) {
+      return res.status(400).json({ error: "Quantidade inválida. Deve ser um número maior que 0." });
+    }
+
+    // Busca o produto no banco
+    const product = await prisma.product.findUnique({ where: { id: parseInt(productId) } });
+
+    if (!product) {
+      return res.status(404).json({ error: "Produto não encontrado." });
+    }
+
+    let newQuantity = product.quantity;
+
+    if (movementType === "saida") {
+      if (product.quantity < quantity) {
+        return res.status(400).json({ error: "Estoque insuficiente para a saída." });
+      }
+      newQuantity -= quantity;
+    } else if (movementType === "entrada") {
+      newQuantity += quantity;
+    }
+
+    // Atualiza o estoque do produto
+    await prisma.product.update({
+      where: { id: parseInt(productId) },
+      data: { quantity: newQuantity },
+    });
+
+    // Definir idAdmin e idUser baseado se o usuário é admin ou não
+    let idAdmin;
+    let idUser = null;
+
+    if (req.user.isAdmin) {
+      idAdmin = req.user.id;
+    } else {
+      // Se for um usuário comum, buscamos o idAdmin e definimos idUser corretamente
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { idAdmin: true },
+      });
+
+      idAdmin = user?.idAdmin;
+      idUser = req.user.id;
+    }
+
+    // Registra a movimentação com idAdmin e idUser corretamente preenchidos
+    const stockMovement = await prisma.stockMovement.create({
+      data: {
+        productId: parseInt(productId),
+        quantity: movementType === "saida" ? -quantity : quantity, // Negativo para saída
+        movementType,
+        userId: req.user.id, // O usuário que fez a movimentação
+        adminId: idAdmin, // Agora preenchemos o adminId corretamente
+      },
+    });
+
+    res.json({ message: "Movimentação registrada com sucesso!", stockMovement });
+  } catch (error) {
+    console.error("Erro ao movimentar estoque:", error);
+    res.status(500).json({ error: "Erro ao movimentar estoque." });
+  }
+}
+
+
+// Listar movimentações
+async function getStockMovements(req, res) {
+  try {
+    const movements = await prisma.stockMovement.findMany({
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            itemType: true,
+            supplier: true,
+            quantity: true,
+            unit: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true, 
+            idAdmin: true,
+          },
+        },
+        userAdmin: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    
+
+    res.json(movements);
+  } catch (error) {
+    console.error("Erro ao buscar movimentações:", error);
+    res.status(500).json({ error: "Erro ao buscar movimentações." });
+  }
+}
 
 
 module.exports = {
@@ -202,4 +315,6 @@ module.exports = {
   getProducts,
   deleteProduct,
   updateProductQuantity,
+  moveStock,
+  getStockMovements,
 };

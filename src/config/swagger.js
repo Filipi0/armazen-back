@@ -17,7 +17,7 @@ const options = {
       },
     ],
   },
-  apis: ["./src/routes/*.js"], // 🔹 Indica onde estão as rotas para documentar
+  apis: ["./src/routes/*.js"],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
